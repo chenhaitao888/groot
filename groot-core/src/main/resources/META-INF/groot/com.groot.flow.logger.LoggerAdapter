@@ -1,0 +1,1 @@
+slf4j=com.groot.flow.logger.Slf4jLoggerAdapter

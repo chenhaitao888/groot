@@ -1,0 +1,11 @@
+grootConfig:
+  registryAddress: "zookeeper://192.168.98.148:2181"
+  clusterName: "groot-server"
+  listenPort: 3502
+  parameters:
+    groot.zk: "curator"
+    groot.center: "default"
+    groot.logger: "slf4j"
+    groot.serializable: "fastjson"
+
+

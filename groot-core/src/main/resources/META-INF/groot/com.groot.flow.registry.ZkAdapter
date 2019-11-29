@@ -1,0 +1,1 @@
+curator=com.groot.flow.registry.CuratorZkAdapter
