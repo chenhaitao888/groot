@@ -7,10 +7,6 @@ package com.groot.flow.registry;
 public abstract class AbstractZkAPI implements ZkAPI {
     @Override
     public void createNode(String path, Object data, boolean ephemeral, boolean sequential) {
-        /*int i = path.lastIndexOf('/');
-        if (i > 0) {
-            createNode(path.substring(0, i), data, false, false);
-        }*/
         if(ephemeral){
             creatEphemeralNode(path, data, sequential);
         }else {
