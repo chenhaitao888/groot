@@ -21,9 +21,9 @@ import java.io.IOException;
  */
 public class App {
     public static void main(String[] args) throws IOException {
-        String confPath = "/Users/chenhaitao/Downloads/groot-parent/groot-startup/src/main/resources/conf";
+        String confPath = "/Users/chenhaitao/IdeaProjects/groot/groot-startup/src/main/resources";
         String log4jPath = confPath + "/log4j.properties";
-        String serverPath = confPath + "/groot-server.yml";
+        String serverPath = confPath + "/conf/groot-server.yml";
         ServerConfig serverConfig = new ServerConfig();
         File file = new File(serverPath);
         FileInputStream in = new FileInputStream(file);
