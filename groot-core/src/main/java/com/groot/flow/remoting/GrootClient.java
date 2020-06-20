@@ -21,4 +21,6 @@ public interface GrootClient {
             RemotingSendRequestException, RemotingTimeoutException;
     void registerProcessor(final int requestCode, final RemotingProcessor processor,
                            final ExecutorService executor);
+
+    void registerDefaultProcessor(final RemotingProcessor processor, final ExecutorService executor);
 }

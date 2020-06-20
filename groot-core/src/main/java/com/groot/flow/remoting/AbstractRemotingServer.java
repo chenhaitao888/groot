@@ -6,6 +6,7 @@ import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
 import com.groot.flow.processor.RemotingProcessor;
 import com.groot.flow.remoting.channel.GrootChannel;
+import com.groot.flow.utils.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,13 @@ public abstract class AbstractRemotingServer extends AbstractRemoting implements
 
     @Override
     public void registerProcessor(int requestCode, RemotingProcessor processor, ExecutorService executor) {
-        processorTables.put(requestCode, processor);
+        Pair<RemotingProcessor, ExecutorService> pair = new Pair<>(processor, executor);
+        processorTables.put(requestCode, pair);
+    }
+
+    @Override
+    public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
+        this.defaultRequestProcessor = new Pair<>(processor, executor);
     }
 
     public GrootChannel getChannel(String address){

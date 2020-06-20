@@ -3,23 +3,32 @@ package com.groot.flow.remoting;
 
 import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
+import com.groot.flow.factory.LoggerFactory;
+import com.groot.flow.logger.Logger;
 import com.groot.flow.processor.RemotingProcessor;
 import com.groot.flow.processor.ServerProcessor;
+import com.groot.flow.registry.RegistryUtil;
 import com.groot.flow.remoting.channel.GrootChannel;
 import com.groot.flow.remoting.codec.GrootCodec;
 import com.groot.flow.remoting.codec.DefaultCodec;
+import com.groot.flow.utils.Pair;
 
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author : chenhaitao934
  * @date : 10:16 上午 2020/5/20
  */
 public abstract class AbstractRemoting {
+    private Logger logger = LoggerFactory.getLogger(AbstractRemoting.class.getName());
     protected ServerProcessor processor = new ServerProcessor();
-    protected final ConcurrentHashMap<Integer /* opaque */, GrootResponseFuture> responseTable =
+    protected final ConcurrentHashMap<Integer, GrootResponseFuture> responseTable =
             new ConcurrentHashMap<Integer, GrootResponseFuture>(256);
-    protected final ConcurrentHashMap<Integer, RemotingProcessor> processorTables = new ConcurrentHashMap<>();
+    protected final HashMap<Integer, Pair<RemotingProcessor, ExecutorService>> processorTables = new HashMap<>(64);
+    protected Pair<RemotingProcessor, ExecutorService> defaultRequestProcessor;
+    //protected final ConcurrentHashMap<Integer, RemotingProcessor> processorTables = new ConcurrentHashMap<>();
     public void processMessageReceived(GrootChannel channel, GrootCommand command){
         if (command != null) {
             switch (GrootCommandHelper.getRemotingCommandType(command)) {
@@ -46,71 +55,62 @@ public abstract class AbstractRemoting {
     }
 
     private void processRequestCommand(GrootChannel channel, GrootCommand command) {
-        System.out.println("开始处理请求.....");
-        try {
-            final RemotingProcessor remotingProcessor = processorTables.get(command.getCode());
-            if(remotingProcessor == null){
-                return;
-            }
-            GrootCommand response = remotingProcessor.processRequest(channel, command);
-            response.setOpaque(command.getOpaque());
-            channel.writeAndFlush(response).addListener(new GrootChannelHandlerListener() {
-                @Override
-                public void operationComplete(GrootFuture future) throws Exception {
+        logger.info("{} begin handle request from {}", channel.localAddress(), channel.remoteAddress());
+        final Pair<RemotingProcessor, ExecutorService> mathedPair = processorTables.get(command.getCode());
+        final Pair<RemotingProcessor, ExecutorService> processorExecutorPair = null == mathedPair ? this.defaultRequestProcessor : mathedPair;
+        processorExecutorPair.getValue().submit(() -> {
+            try {
+                GrootCommand response = processorExecutorPair.getKey().processRequest(channel, command);
+                response.setOpaque(command.getOpaque());
+                channel.writeAndFlush(response).addListener(future -> {
                     if(!future.isSuccess()){
-                        System.out.println("response to " + GrootRemotingHelper.parseChannelRemoteAddr(channel) + " failed:" + future.cause());
+                        logger.info("response to {} failed: {}", GrootRemotingHelper.parseChannelRemoteAddr(channel), future.cause());
                     }else {
-                        System.out.println("response to " + GrootRemotingHelper.parseChannelRemoteAddr(channel) + "success");
+                        logger.info("response to {} success", GrootRemotingHelper.parseChannelRemoteAddr(channel));
                     }
-
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                });
+            } catch (Exception e) {
+                logger.error("process request failed", e);
+            }
+        });
     }
 
     public GrootCommand invokeSyncImpl(final GrootChannel channel, final GrootCommand request,
                                           final long timeoutMillis) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException {
         try {
-            System.out.println("线程：" + Thread.currentThread());
             final GrootResponseFuture responseFuture =
                     new GrootResponseFuture(request.getOpaque(), timeoutMillis, null, null);
             this.responseTable.put(request.getOpaque(), responseFuture);
-            channel.writeAndFlush(request).addListener(new GrootChannelHandlerListener() {
-                @Override
-                public void operationComplete(GrootFuture future) throws Exception {
-                    if (future.isSuccess()) {
-                        responseFuture.setSendRequestOK(true);
-                        return;
-                    } else {
-                        responseFuture.setSendRequestOK(false);
-                    }
-
-                    responseTable.remove(request.getOpaque());
-                    responseFuture.setCause(future.cause());
-                    responseFuture.putResponse(null);
+            channel.writeAndFlush(request).addListener(future -> {
+                if (future.isSuccess()) {
+                    responseFuture.setSendRequestOK(true);
+                    return;
+                } else {
+                    responseFuture.setSendRequestOK(false);
                 }
+                responseTable.remove(request.getOpaque());
+                responseFuture.setCause(future.cause());
+                responseFuture.putResponse(null);
             });
 
             GrootCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
             if (null == responseCommand) {
-                // 发送请求成功，读取应答超时
+                /**发送请求成功，读取应答超时*/
                 if (responseFuture.isSendRequestOK()) {
-                    System.out.println("读取" + GrootRemotingHelper.parseChannelRemoteAddr(channel) + "应答失败");
+                    logger.info("read {} response failed", GrootRemotingHelper.parseChannelRemoteAddr(channel));
                     throw new RemotingTimeoutException(GrootRemotingHelper.parseChannelRemoteAddr(channel),
                             timeoutMillis, responseFuture.getCause());
                 }
-                // 发送请求失败
+                /**发送请求失败*/
                 else {
                     throw new RemotingSendRequestException(GrootRemotingHelper.parseChannelRemoteAddr(channel),
                             responseFuture.getCause());
                 }
             }
-            System.out.println("读取" + GrootRemotingHelper.parseChannelRemoteAddr(channel) + "应答成功");
+            logger.info("read {} reponse success", GrootRemotingHelper.parseChannelRemoteAddr(channel));
             return responseCommand;
         } finally {
-            //this.responseTable.remove(request.getOpaque());
+            this.responseTable.remove(request.getOpaque());
         }
     }
     protected GrootCodec getCodec(){

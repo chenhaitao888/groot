@@ -6,6 +6,7 @@ import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
 import com.groot.flow.processor.RemotingProcessor;
 import com.groot.flow.remoting.channel.GrootChannel;
+import com.groot.flow.utils.Pair;
 
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +49,13 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 
     @Override
     public void registerProcessor(int requestCode, RemotingProcessor processor, ExecutorService executor) {
-        processorTables.put(requestCode, processor);
+        Pair<RemotingProcessor, ExecutorService> pair = new Pair<>(processor, executor);
+        processorTables.put(requestCode, pair);
+    }
+
+    @Override
+    public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
+        this.defaultRequestProcessor = new Pair<>(processor, executor);
     }
 
     private GrootChannel getAndCreateChannel(final String addr) throws Exception {
@@ -64,9 +71,11 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
             if (cw != null) {
                 if(cw.isConnected()){
                     return cw.getChannel();
-                }else if(!cw.getChannelFuture().isDone()) { //说明正在连接
+                }else if(!cw.getChannelFuture().isDone()) {
+                    /**正在连接*/
                     createNewConnection = false;
-                }else { //说明连接已经断开
+                }else {
+                    /**连接已经断开*/
                     this.channelTables.remove(addr);
                     createNewConnection = true;
                 }

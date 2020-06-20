@@ -23,4 +23,6 @@ public interface GrootServer {
     GrootChannel getChannel(List<String> address);
     void registerProcessor(final int requestCode, final RemotingProcessor processor,
                            final ExecutorService executor);
+
+    void registerDefaultProcessor(final RemotingProcessor processor, final ExecutorService executor);
 }
