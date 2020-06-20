@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
  * @author : chenhaitao934
  * @date : 10:38 上午 2020/5/20
  */
-public abstract class AbstractRemotingServer extends AbstractRemoting implements RemotingServer {
+public abstract class AbstractRemotingServer extends AbstractRemoting implements GrootServer {
     protected final GrootServerConfig remotingServerConfig;
     public final Map<String, GrootChannel> channelMap = new ConcurrentHashMap<>();
     protected AbstractRemotingServer(GrootServerConfig remotingServerConfig) {

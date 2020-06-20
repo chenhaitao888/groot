@@ -1,13 +1,12 @@
 package com.groot.flow;
 
 
-import com.groot.flow.exception.RemotingException;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.netty.server.GrootRemotingServer;
 import com.groot.flow.processor.ServerProcessor;
+import com.groot.flow.remoting.GrootServer;
 import com.groot.flow.remoting.JobPushRequest;
 import com.groot.flow.remoting.GrootCommand;
-import com.groot.flow.remoting.RemotingServer;
 import com.groot.flow.remoting.GrootServerConfig;
 import com.groot.flow.remoting.channel.GrootChannel;
 import org.apache.log4j.PropertyConfigurator;
@@ -34,7 +33,7 @@ public class BootStrapServer {
         serverConfig = serverConfig.fromYAML(in);
         LoggerFactory.setLoggerAdapter(serverConfig.getGrootConfig());
         GrootServerConfig config = new GrootServerConfig();
-        RemotingServer server = new GrootRemotingServer(config);
+        GrootServer server = new GrootRemotingServer(config);
         server.start();
         server.registerProcessor(2, new ServerProcessor(), null);
         while (true) {
@@ -46,7 +45,7 @@ public class BootStrapServer {
             body.setMethodName("testJob");
             body.setJobName("fistTestJob");
             List<String> list = new ArrayList<>();
-            list.add("172.16.210.173");
+            list.add("192.168.1.4");
             body.setAddressList(list);
             command.setBody(body);
             command.setOpaque(1);
