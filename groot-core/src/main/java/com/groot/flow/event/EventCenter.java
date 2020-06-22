@@ -11,8 +11,9 @@ import com.groot.flow.constant.GrootConfig;
  */
 @SPI(key = EXGrootConfig.GROOT_EVENT, value = "default")
 public interface EventCenter {
-    void subsribe(Subscriber subscriber, String... topics);
-    void unSubsribe(String topic, Subscriber subscriber);
-    void publish(EventInfo eventInfo);
+    void subscribe(EventSubscriber subscriber, String... topics);
+    void unSubscribe(String topic, EventSubscriber subscriber);
     void publishSync(EventInfo eventInfo);
+    void publishAsync(EventInfo eventInfo);
+
 }

@@ -1,9 +1,8 @@
 package com.groot.flow.event;
 
-import com.groot.flow.constant.Constants;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import com.groot.flow.factory.NamedThreadFactory;
+
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -15,57 +14,68 @@ import java.util.concurrent.Executors;
  * 默认的事件中心实现
  */
 public class DefaultEventCenter implements EventCenter {
-    private static final ConcurrentHashMap<String, Set<Subscriber>> eventMap = new ConcurrentHashMap<>();
-    private static final ExecutorService executor = Executors.newFixedThreadPool(Constants.AVAILABLE_PROCESSOR * 2);
+    private final ConcurrentHashMap<String, Set<EventSubscriber>> ecMap =
+            new ConcurrentHashMap<String, Set<EventSubscriber>>();
 
-    @Override
-    public void subsribe(Subscriber subscriber, String... topics) {
-        Arrays.stream(topics).forEach((t) -> {
-            Set<Subscriber> subscribers = eventMap.get(t);
+    private final ExecutorService executor = Executors.newFixedThreadPool(4 * 2, new NamedThreadFactory("GootEventCenter-Executor", true));
+    public void subscribe(EventSubscriber subscriber, String... topics) {
+        for (String topic : topics) {
+            Set<EventSubscriber> subscribers = ecMap.get(topic);
             if (subscribers == null) {
-                subscribers = new HashSet<>();
-                Set<Subscriber> oSubscriber = eventMap.putIfAbsent(t, subscribers);
-                if (oSubscriber != null) {
-                    subscribers = oSubscriber;
+                subscribers = new ConcurrentHashSet<EventSubscriber>();
+                Set<EventSubscriber> oldSubscribers = ecMap.putIfAbsent(topic, subscribers);
+                if (oldSubscribers != null) {
+                    subscribers = oldSubscribers;
                 }
             }
             subscribers.add(subscriber);
-        });
-
-    }
-
-    @Override
-    public void unSubsribe(String topic, Subscriber subscriber) {
-        Set<Subscriber> subscribers = eventMap.get(topic);
-        if (subscriber != null) {
-            subscribers.forEach((var) -> {
-                if ((var.getSeriaNum().equals(subscriber.getSeriaNum()))) {
-                    subscribers.remove(var);
-                }
-            });
         }
     }
 
-    @Override
-    public void publish(EventInfo eventInfo) {
-        Set<Subscriber> subscribers = eventMap.get(eventInfo.getTopic());
+    public void unSubscribe(String topic, EventSubscriber subscriber) {
+        Set<EventSubscriber> subscribers = ecMap.get(topic);
         if (subscribers != null) {
-            subscribers.forEach((var) -> {
-                var.getObserver().handleEvent(eventInfo);
-            });
+            for (EventSubscriber eventSubscriber : subscribers) {
+                if (eventSubscriber.getId().equals(subscriber.getId())) {
+                    subscribers.remove(eventSubscriber);
+                }
+            }
         }
     }
 
-    @Override
     public void publishSync(EventInfo eventInfo) {
-        executor.submit(() -> {
-            Set<Subscriber> subscribers = eventMap.get(eventInfo.getTopic());
-            if (subscribers != null) {
-                subscribers.forEach((var) -> {
-                    var.getObserver().handleEvent(eventInfo);
-                });
+        Set<EventSubscriber> subscribers = ecMap.get(eventInfo.getTopic());
+        if (subscribers != null) {
+            for (EventSubscriber subscriber : subscribers) {
+                eventInfo.setTopic(eventInfo.getTopic());
+                try {
+                    //subscriber.getObserver().onObserved(eventInfo);
+                    subscriber.getConsumer().accept(eventInfo);
+                } catch (Throwable t) {      // 防御性容错
+
+                }
+            }
+        }
+    }
+
+    public void publishAsync(final EventInfo eventInfo) {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                String topic = eventInfo.getTopic();
+
+                Set<EventSubscriber> subscribers = ecMap.get(topic);
+                if (subscribers != null) {
+                    for (EventSubscriber subscriber : subscribers) {
+                        try {
+                            eventInfo.setTopic(topic);
+                            subscriber.getObserver().onObserved(eventInfo);
+                        } catch (Throwable t) {     // 防御性容错
+
+                        }
+                    }
+                }
             }
         });
-
     }
 }

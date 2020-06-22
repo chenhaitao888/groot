@@ -1,6 +1,7 @@
 package com.groot.flow;
 
 
+import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.netty.server.GrootRemotingServer;
 import com.groot.flow.processor.ServerProcessor;
@@ -15,6 +16,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author : chenhaitao934
@@ -32,10 +35,13 @@ public class BootStrapServer {
         FileInputStream in = new FileInputStream(file);
         serverConfig = serverConfig.fromYAML(in);
         LoggerFactory.setLoggerAdapter(serverConfig.getGrootConfig());
+        CustomizeThreadPollExecutor executor = new CustomizeThreadPollExecutor("server thread", 50, 50, 60, 2000,
+                false, null);
+        ExecutorService executorService = executor.initializeExecutor(executor, new ThreadPoolExecutor.AbortPolicy());
         GrootServerConfig config = new GrootServerConfig();
         GrootServer server = new GrootRemotingServer(config);
         server.start();
-        server.registerProcessor(2, new ServerProcessor(), null);
+        server.registerProcessor(2, new ServerProcessor(), executorService);
         while (true) {
             Thread.sleep(5000);
             GrootCommand command = new GrootCommand();

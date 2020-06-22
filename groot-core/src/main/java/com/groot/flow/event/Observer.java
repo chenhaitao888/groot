@@ -6,5 +6,5 @@ package com.groot.flow.event;
  * 观察接口
  */
 public interface Observer {
-    void handleEvent(EventInfo eventInfo);
+    void onObserved(EventInfo eventInfo);
 }

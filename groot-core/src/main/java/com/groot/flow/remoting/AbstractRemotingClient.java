@@ -4,7 +4,8 @@ import com.groot.flow.exception.RemotingConnectException;
 import com.groot.flow.exception.RemotingException;
 import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
-import com.groot.flow.processor.RemotingProcessor;
+import com.groot.flow.processor.GrootProcessor;
+import com.groot.flow.processor.GrootProcessor;
 import com.groot.flow.remoting.channel.GrootChannel;
 import com.groot.flow.utils.Pair;
 
@@ -48,13 +49,13 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
     }
 
     @Override
-    public void registerProcessor(int requestCode, RemotingProcessor processor, ExecutorService executor) {
-        Pair<RemotingProcessor, ExecutorService> pair = new Pair<>(processor, executor);
+    public void registerProcessor(int requestCode, GrootProcessor processor, ExecutorService executor) {
+        Pair<GrootProcessor, ExecutorService> pair = new Pair<>(processor, executor);
         processorTables.put(requestCode, pair);
     }
 
     @Override
-    public void registerDefaultProcessor(RemotingProcessor processor, ExecutorService executor) {
+    public void registerDefaultProcessor(GrootProcessor processor, ExecutorService executor) {
         this.defaultRequestProcessor = new Pair<>(processor, executor);
     }
 

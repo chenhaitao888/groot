@@ -27,6 +27,10 @@ public class GrootCommand implements Serializable {
         return cmd;
     }
 
+    public static GrootCommand createResponseCommand(int code, String remark){
+        return createResponseCommand(code, remark, null);
+    }
+
     public static GrootCommand createResponseCommand(int code, String remark, GrootCommandBody body) {
         GrootCommand cmd = new GrootCommand();
         GrootCommandHelper.markResponseType(cmd);

@@ -7,4 +7,5 @@ package com.groot.flow.constant;
  */
 public interface Constants {
     int AVAILABLE_PROCESSOR = Runtime.getRuntime().availableProcessors();
+    String QUARTZ_CONTEXT = "quartz_contex";
 }

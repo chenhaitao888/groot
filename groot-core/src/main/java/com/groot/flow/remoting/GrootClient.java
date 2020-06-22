@@ -5,7 +5,8 @@ import com.groot.flow.exception.RemotingConnectException;
 import com.groot.flow.exception.RemotingException;
 import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
-import com.groot.flow.processor.RemotingProcessor;
+import com.groot.flow.processor.GrootProcessor;
+import com.groot.flow.processor.GrootProcessor;
 
 import java.util.concurrent.ExecutorService;
 
@@ -19,8 +20,8 @@ public interface GrootClient {
     GrootCommand invokeSync(final String addr, final GrootCommand request,
                                final long timeoutMillis) throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException;
-    void registerProcessor(final int requestCode, final RemotingProcessor processor,
+    void registerProcessor(final int requestCode, final GrootProcessor processor,
                            final ExecutorService executor);
 
-    void registerDefaultProcessor(final RemotingProcessor processor, final ExecutorService executor);
+    void registerDefaultProcessor(final GrootProcessor processor, final ExecutorService executor);
 }

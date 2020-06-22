@@ -5,9 +5,9 @@ import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.logger.Logger;
-import com.groot.flow.processor.RemotingProcessor;
+import com.groot.flow.processor.GrootProcessor;
+import com.groot.flow.processor.GrootProcessor;
 import com.groot.flow.processor.ServerProcessor;
-import com.groot.flow.registry.RegistryUtil;
 import com.groot.flow.remoting.channel.GrootChannel;
 import com.groot.flow.remoting.codec.GrootCodec;
 import com.groot.flow.remoting.codec.DefaultCodec;
@@ -22,14 +22,15 @@ import java.util.concurrent.ExecutorService;
  * @date : 10:16 上午 2020/5/20
  */
 public abstract class AbstractRemoting {
-    private Logger logger = LoggerFactory.getLogger(AbstractRemoting.class.getName());
+    public Logger logger = LoggerFactory.getLogger(AbstractRemoting.class.getName());
     protected ServerProcessor processor = new ServerProcessor();
     protected final ConcurrentHashMap<Integer, GrootResponseFuture> responseTable =
             new ConcurrentHashMap<Integer, GrootResponseFuture>(256);
-    protected final HashMap<Integer, Pair<RemotingProcessor, ExecutorService>> processorTables = new HashMap<>(64);
-    protected Pair<RemotingProcessor, ExecutorService> defaultRequestProcessor;
+    protected final HashMap<Integer, Pair<GrootProcessor, ExecutorService>> processorTables = new HashMap<>(64);
+    protected Pair<GrootProcessor, ExecutorService> defaultRequestProcessor;
+
     //protected final ConcurrentHashMap<Integer, RemotingProcessor> processorTables = new ConcurrentHashMap<>();
-    public void processMessageReceived(GrootChannel channel, GrootCommand command){
+    public void processMessageReceived(GrootChannel channel, GrootCommand command) {
         if (command != null) {
             switch (GrootCommandHelper.getRemotingCommandType(command)) {
                 case REQUEST_COMMAND:
@@ -45,10 +46,10 @@ public abstract class AbstractRemoting {
     }
 
     private void processResponseCommand(GrootChannel channel, GrootCommand command) {
-        System.out.println("线程" + Thread.currentThread() +"开始处理" + GrootRemotingHelper.parseChannelRemoteAddr(channel) + "响应");
+        logger.info("thread {} begin process {}'s reponse", Thread.currentThread(), GrootRemotingHelper.parseChannelRemoteAddr(channel));
         final GrootResponseFuture responseFuture = responseTable.get(command.getOpaque());
-        if(responseFuture == null){
-            System.out.println("receive response, but not matched any request");
+        if (responseFuture == null) {
+            logger.info("receive response, but not matched any request");
             return;
         }
         responseFuture.putResponse(command);
@@ -56,16 +57,16 @@ public abstract class AbstractRemoting {
 
     private void processRequestCommand(GrootChannel channel, GrootCommand command) {
         logger.info("{} begin handle request from {}", channel.localAddress(), channel.remoteAddress());
-        final Pair<RemotingProcessor, ExecutorService> mathedPair = processorTables.get(command.getCode());
-        final Pair<RemotingProcessor, ExecutorService> processorExecutorPair = null == mathedPair ? this.defaultRequestProcessor : mathedPair;
+        final Pair<GrootProcessor, ExecutorService> mathedPair = processorTables.get(command.getCode());
+        final Pair<GrootProcessor, ExecutorService> processorExecutorPair = null == mathedPair ? this.defaultRequestProcessor : mathedPair;
         processorExecutorPair.getValue().submit(() -> {
             try {
                 GrootCommand response = processorExecutorPair.getKey().processRequest(channel, command);
                 response.setOpaque(command.getOpaque());
                 channel.writeAndFlush(response).addListener(future -> {
-                    if(!future.isSuccess()){
+                    if (!future.isSuccess()) {
                         logger.info("response to {} failed: {}", GrootRemotingHelper.parseChannelRemoteAddr(channel), future.cause());
-                    }else {
+                    } else {
                         logger.info("response to {} success", GrootRemotingHelper.parseChannelRemoteAddr(channel));
                     }
                 });
@@ -76,7 +77,7 @@ public abstract class AbstractRemoting {
     }
 
     public GrootCommand invokeSyncImpl(final GrootChannel channel, final GrootCommand request,
-                                          final long timeoutMillis) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException {
+                                       final long timeoutMillis) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException {
         try {
             final GrootResponseFuture responseFuture =
                     new GrootResponseFuture(request.getOpaque(), timeoutMillis, null, null);
@@ -113,7 +114,8 @@ public abstract class AbstractRemoting {
             this.responseTable.remove(request.getOpaque());
         }
     }
-    protected GrootCodec getCodec(){
+
+    protected GrootCodec getCodec() {
         return new DefaultCodec();
     }
 

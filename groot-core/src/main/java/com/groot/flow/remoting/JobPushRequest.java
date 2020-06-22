@@ -1,16 +1,18 @@
 package com.groot.flow.remoting;
 
+import com.groot.flow.job.JobMetaData;
+
 import java.util.List;
 
 /**
  * @author : chenhaitao934
  * @date : 7:22 下午 2020/5/22
  */
-public class JobPushRequest implements GrootCommandBody {
+public class JobPushRequest extends AbstractCommandBody implements GrootCommandBody {
     private String jobName;
     private String className;
     private String methodName;
-    private List<String> addressList;
+    private List<JobMetaData> jobMetaDataList;
     public String getJobName() {
         return jobName;
     }
@@ -35,11 +37,11 @@ public class JobPushRequest implements GrootCommandBody {
         this.methodName = methodName;
     }
 
-    public List<String> getAddressList() {
-        return addressList;
+    public List<JobMetaData> getJobMetaDataList() {
+        return jobMetaDataList;
     }
 
-    public void setAddressList(List<String> addressList) {
-        this.addressList = addressList;
+    public void setJobMetaDataList(List<JobMetaData> jobMetaDataList) {
+        this.jobMetaDataList = jobMetaDataList;
     }
 }

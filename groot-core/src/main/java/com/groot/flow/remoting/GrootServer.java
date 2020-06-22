@@ -4,7 +4,7 @@ package com.groot.flow.remoting;
 import com.groot.flow.exception.RemotingException;
 import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
-import com.groot.flow.processor.RemotingProcessor;
+import com.groot.flow.processor.GrootProcessor;
 import com.groot.flow.remoting.channel.GrootChannel;
 
 import java.util.List;
@@ -21,8 +21,8 @@ public interface GrootServer {
                             final long timeoutMillis) throws InterruptedException, RemotingSendRequestException,
             RemotingTimeoutException;
     GrootChannel getChannel(List<String> address);
-    void registerProcessor(final int requestCode, final RemotingProcessor processor,
+    void registerProcessor(final int requestCode, final GrootProcessor processor,
                            final ExecutorService executor);
 
-    void registerDefaultProcessor(final RemotingProcessor processor, final ExecutorService executor);
+    void registerDefaultProcessor(final GrootProcessor processor, final ExecutorService executor);
 }

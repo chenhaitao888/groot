@@ -149,7 +149,7 @@ public class GrootRemotingServer extends AbstractRemotingServer {
             Channel channel = ctx.channel();
             NettyChannel nettyChannel = new NettyChannel(channel);
             String addr = GrootRemotingHelper.parseChannelRemoteAddr(nettyChannel);
-            System.out.println(addr + "连接上了");
+            logger.info("{} has beean connected", addr);
             String[] s = addr.split(":");
             channelMap.put(s[0], nettyChannel);
 

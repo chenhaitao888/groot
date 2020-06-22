@@ -1,8 +1,10 @@
 package com.groot.flow;
 
 
+import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
 import com.groot.flow.exception.RemotingException;
 import com.groot.flow.factory.LoggerFactory;
+import com.groot.flow.job.context.JobExecuteApplicationContext;
 import com.groot.flow.netty.client.GrootRemotingClient;
 import com.groot.flow.processor.JobHandlerProcessor;
 import com.groot.flow.remoting.GrootClient;
@@ -13,6 +15,8 @@ import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author : chenhaitao934
@@ -29,10 +33,14 @@ public class BootStrapClient {
         FileInputStream in = new FileInputStream(file);
         serverConfig = serverConfig.fromYAML(in);
         LoggerFactory.setLoggerAdapter(serverConfig.getGrootConfig());
+        CustomizeThreadPollExecutor executor = new CustomizeThreadPollExecutor("client thread", 50, 50, 60, 2000,
+                false, null);
+        ExecutorService executorService = executor.initializeExecutor(executor, new ThreadPoolExecutor.AbortPolicy());
         GrootClientConfig clientConfig = new GrootClientConfig();
         GrootClient client = new GrootRemotingClient(clientConfig);
         client.start();
-        client.registerProcessor(1, new JobHandlerProcessor(), null);
+        JobExecuteApplicationContext applicationContext = new JobExecuteApplicationContext();
+        client.registerProcessor(1, new JobHandlerProcessor(applicationContext), executorService);
         GrootCommand command = new GrootCommand();
         command.setCode(2);
         command.setOpaque(2);

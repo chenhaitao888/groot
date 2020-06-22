@@ -25,6 +25,8 @@
         <log4j.version>1.2.16</log4j.version>
         <jackson.version>2.9.8</jackson.version>
         <netty.version>4.1.50.Final</netty.version>
+        <quartz.version>2.3.2</quartz.version>
+        <cglib.version>3.3.0</cglib.version>
     </properties>
 
     <dependencyManagement>
@@ -105,6 +107,19 @@
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.quartz-scheduler</groupId>
+                <artifactId>quartz</artifactId>
+                <version>${quartz.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cglib</groupId>
+                <artifactId>cglib-nodep</artifactId>
+                <version>${cglib.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

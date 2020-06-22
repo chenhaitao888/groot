@@ -8,7 +8,7 @@ import com.groot.flow.remoting.channel.GrootChannel;
  * @author : chenhaitao934
  * @date : 3:43 下午 2020/5/21
  */
-public class ServerProcessor implements RemotingProcessor{
+public class ServerProcessor implements GrootProcessor{
 
     @Override
     public GrootCommand processRequest(GrootChannel channel, GrootCommand request) throws Exception {

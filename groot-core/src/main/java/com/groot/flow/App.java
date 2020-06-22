@@ -2,8 +2,8 @@ package com.groot.flow;
 
 import com.groot.flow.event.DefaultEventCenter;
 import com.groot.flow.event.EventInfo;
+import com.groot.flow.event.EventSubscriber;
 import com.groot.flow.event.Observer;
-import com.groot.flow.event.Subscriber;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,17 +18,14 @@ public class App {
         EventInfo info = new EventInfo("test", param);
         DefaultEventCenter center = new DefaultEventCenter();
 
-        Subscriber subscriber = new Subscriber("12", new Observer() {
-            @Override
-            public void handleEvent(EventInfo eventInfo) {
+        EventSubscriber subscriber = new EventSubscriber("12", (eventInfo) -> {
                 System.out.println(eventInfo.getEvents());
-            }
         });
 
-        center.subsribe(subscriber, new String[]{"test", "test2"});
-        center.publish(info);
-        center.unSubsribe("test", subscriber);
-        center.publish(info);
+        center.subscribe(subscriber, new String[]{"test", "test2"});
+        center.publishSync(info);
+        center.unSubscribe("test", subscriber);
+        center.publishSync(info);
     }
 }
 
