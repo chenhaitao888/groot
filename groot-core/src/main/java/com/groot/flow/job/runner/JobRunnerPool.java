@@ -4,9 +4,7 @@ import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
 import com.groot.flow.constant.EcTopic;
 import com.groot.flow.constant.GrootResult;
 import com.groot.flow.constant.JobType;
-import com.groot.flow.event.EventInfo;
 import com.groot.flow.event.EventSubscriber;
-import com.groot.flow.event.Observer;
 import com.groot.flow.exception.JobExecuteException;
 import com.groot.flow.exception.NoAvailableWorkThreadException;
 import com.groot.flow.factory.LoggerFactory;
@@ -17,10 +15,8 @@ import com.groot.flow.job.context.JobExecuteApplicationContext;
 import com.groot.flow.job.quartz.QuartzCronJobRunnerDelegate;
 import com.groot.flow.job.quartz.QuartzJobContext;
 import com.groot.flow.logger.Logger;
-import com.groot.flow.processor.JobHandlerProcessor;
 import com.groot.flow.utils.BeanCopyUtils;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 
