@@ -22,7 +22,7 @@ public class DefaultRunnerAdapter implements GrootJobRunnerAdapter{
         try {
             return context.getJobRunnerClass().newInstance();
         } catch (Exception e) {
-            logger.error("create job");
+            logger.error("create job fail");
         }
         return null;
     }

@@ -60,11 +60,11 @@ public class JobRunnerPool {
                     GrootResult run = new QuartzCronJobRunnerDelegate(buildCronJobContext(jobMetaData)).run();
                     // 将运行结果返回给服务端 TODO
                 }
-                if(jobMetaData.getJobType() == JobType.REPEAT){
+                else if(jobMetaData.getJobType() == JobType.REPEAT){
                     // TODO
 
                 }
-                if(jobMetaData.getJobType() == JobType.FLOW){
+                else if(jobMetaData.getJobType() == JobType.FLOW){
                     JobContext jobContext = buildJobContext(jobMetaData);
                     GrootJobRunnerAdapter runnerAdapter = null == context.getRunnerAdapter() ? new DefaultRunnerAdapter(jobContext) : context.getRunnerAdapter();
                     GrootJob jobRunner = runnerAdapter.createJobRunner();

@@ -2,9 +2,12 @@ package com.groot.flow;
 
 
 import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
+import com.groot.flow.constant.GrootConfig;
+import com.groot.flow.event.DefaultEventCenter;
 import com.groot.flow.exception.RemotingException;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.job.context.JobExecuteApplicationContext;
+import com.groot.flow.job.runner.JobRunnerPool;
 import com.groot.flow.netty.client.GrootRemotingClient;
 import com.groot.flow.processor.JobHandlerProcessor;
 import com.groot.flow.remoting.GrootClient;
@@ -40,6 +43,14 @@ public class BootStrapClient {
         GrootClient client = new GrootRemotingClient(clientConfig);
         client.start();
         JobExecuteApplicationContext applicationContext = new JobExecuteApplicationContext();
+        DefaultEventCenter eventCenter = new DefaultEventCenter();
+        applicationContext.setEventCenter(eventCenter);
+        GrootConfig config = new GrootConfig();
+        config.setId("testQuartz");
+        config.setWorkThreads(10);
+        applicationContext.setConfig(config);
+        JobRunnerPool runnerPool = new JobRunnerPool(applicationContext);
+        applicationContext.setJobRunnerPool(runnerPool);
         client.registerProcessor(1, new JobHandlerProcessor(applicationContext), executorService);
         GrootCommand command = new GrootCommand();
         command.setCode(2);

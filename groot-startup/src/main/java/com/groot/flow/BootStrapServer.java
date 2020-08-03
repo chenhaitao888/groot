@@ -2,7 +2,11 @@ package com.groot.flow;
 
 
 import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
+import com.groot.flow.constant.JobType;
 import com.groot.flow.factory.LoggerFactory;
+import com.groot.flow.job.JobMetaData;
+import com.groot.flow.job.context.JobContext;
+import com.groot.flow.job.runner.Test;
 import com.groot.flow.netty.server.GrootRemotingServer;
 import com.groot.flow.processor.ServerProcessor;
 import com.groot.flow.remoting.GrootServer;
@@ -51,8 +55,16 @@ public class BootStrapServer {
             body.setMethodName("testJob");
             body.setJobName("fistTestJob");
             List<String> list = new ArrayList<>();
-            list.add("192.168.1.4");
+            list.add("172.16.210.173");
             body.setAddressList(list);
+            JobMetaData jobMetaData = new JobMetaData();
+            jobMetaData.setCronExpression("0/5 * * * * ?");
+            jobMetaData.setJobName("testquartz");
+            jobMetaData.setJobRunnerClass(Test.class);
+            jobMetaData.setJobType(JobType.CRON);
+            List<JobMetaData> jobMetaDataList = new ArrayList<>();
+            jobMetaDataList.add(jobMetaData);
+            body.setJobMetaDataList(jobMetaDataList);
             command.setBody(body);
             command.setOpaque(1);
             GrootChannel channel1 = server.getChannel(list);
