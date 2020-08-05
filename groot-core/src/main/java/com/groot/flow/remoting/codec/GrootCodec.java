@@ -1,7 +1,7 @@
 package com.groot.flow.remoting.codec;
 
 
-import com.groot.flow.remoting.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommand;
 
 import java.nio.ByteBuffer;
 

@@ -9,7 +9,7 @@ import com.groot.flow.netty.NettyChannelFuture;
 import com.groot.flow.remoting.AbstractRemotingClient;
 import com.groot.flow.remoting.GrootChannelFuture;
 import com.groot.flow.remoting.GrootClientConfig;
-import com.groot.flow.remoting.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommand;
 import com.groot.flow.remoting.channel.GrootChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;

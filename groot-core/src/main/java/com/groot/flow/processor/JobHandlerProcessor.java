@@ -2,17 +2,21 @@ package com.groot.flow.processor;
 
 
 
-import com.groot.flow.GrootContext;
+import com.groot.flow.constant.GrootRequestCode;
 import com.groot.flow.constant.GrootResponseCode;
+import com.groot.flow.constant.GrootResult;
 import com.groot.flow.exception.NoAvailableWorkThreadException;
 import com.groot.flow.job.JobMetaData;
 import com.groot.flow.job.context.JobExecuteApplicationContext;
 import com.groot.flow.job.runner.ExecuteCallback;
-import com.groot.flow.remoting.JobPushRequest;
-import com.groot.flow.remoting.GrootCommand;
-import com.groot.flow.remoting.JobRunResponse;
+import com.groot.flow.remoting.GrootRemotingClientDelegate;
+import com.groot.flow.remoting.command.GrootCompleteRequest;
+import com.groot.flow.remoting.command.JobPushRequest;
+import com.groot.flow.remoting.command.GrootCommand;
+import com.groot.flow.remoting.command.JobRunResponse;
 import com.groot.flow.remoting.channel.GrootChannel;
 import com.groot.flow.utils.CollectionUtils;
+import com.groot.flow.utils.SystemClock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +29,12 @@ public class JobHandlerProcessor extends AbstractProcessor implements GrootProce
 
     private JobExecuteCallback jobExecuteCallback;
 
-    public JobHandlerProcessor(GrootContext context) {
+    private GrootRemotingClientDelegate remotingClientDelegate;
+
+    public JobHandlerProcessor(JobExecuteApplicationContext context) {
         super(context);
         this.jobExecuteCallback = new JobExecuteCallback();
+        this.remotingClientDelegate = context.getRemotingClientDelegate();
     }
 
     @Override
@@ -39,7 +46,7 @@ public class JobHandlerProcessor extends AbstractProcessor implements GrootProce
             jobMetaDataList.forEach((jobMetaData) -> {
                 JobExecuteApplicationContext context = (JobExecuteApplicationContext) this.context;
                 try {
-                    context.getJobRunnerPool().execute(jobMetaData, new JobExecuteCallback());
+                    context.getJobRunnerPool().execute(jobMetaData, new JobExecuteCallback(), context);
                 } catch (NoAvailableWorkThreadException e) {
                     failureJobId.add(jobMetaData.getJobId());
                 }
@@ -57,7 +64,14 @@ public class JobHandlerProcessor extends AbstractProcessor implements GrootProce
     private class JobExecuteCallback implements ExecuteCallback {
 
         @Override
-        public JobMetaData complete() {
+        public JobMetaData complete(GrootResult result) {
+            result.setCompleteTime(SystemClock.now());
+            GrootCompleteRequest completeRequest = context.getWrapper().wrapper(new GrootCompleteRequest());
+            completeRequest.addGrootResults(result);
+            completeRequest.setReceiveNewTask(result.isReceiveNewTask());
+            int requestCode = GrootRequestCode.JOB_COMPLETED.getCode();
+            GrootCommand requestCommand = GrootCommand.createRequestCommand(requestCode, completeRequest);
+            remotingClientDelegate.invokeSync(requestCommand);
             // TODO
             return null;
         }

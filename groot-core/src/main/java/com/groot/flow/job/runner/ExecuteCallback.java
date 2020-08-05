@@ -1,5 +1,6 @@
 package com.groot.flow.job.runner;
 
+import com.groot.flow.constant.GrootResult;
 import com.groot.flow.job.JobMetaData;
 
 /**
@@ -8,5 +9,5 @@ import com.groot.flow.job.JobMetaData;
  */
 public interface ExecuteCallback {
 
-    JobMetaData complete();
+    JobMetaData complete(GrootResult result);
 }

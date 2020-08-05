@@ -1,7 +1,7 @@
 package com.groot.flow.processor;
 
 
-import com.groot.flow.remoting.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommand;
 import com.groot.flow.remoting.channel.GrootChannel;
 
 /**

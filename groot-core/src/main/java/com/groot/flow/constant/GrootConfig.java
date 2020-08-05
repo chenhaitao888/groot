@@ -1,10 +1,12 @@
 package com.groot.flow.constant;
 
+import com.groot.flow.cluster.GrootNodeType;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author chenhaitao
@@ -19,6 +21,10 @@ public class GrootConfig {
     private int workThreads;
     private int queueCapacity;
     private Map<String, String> parameters = new HashMap<>();
+    private GrootNodeType nodeType;
+    private String identity;
+    private int invokeTimeoutMillis;
+    private final Map<String, Object> internal = new ConcurrentHashMap<String, Object>();
     public String getParameter(String key) {
         return parameters.get(key);
     }
@@ -85,6 +91,46 @@ public class GrootConfig {
 
     public void setQueueCapacity(int queueCapacity) {
         this.queueCapacity = queueCapacity;
+    }
+
+    public GrootNodeType getNodeType() {
+        return nodeType;
+    }
+
+    public void setNodeType(GrootNodeType nodeType) {
+        this.nodeType = nodeType;
+    }
+
+    public String getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(String identity) {
+        this.identity = identity;
+    }
+
+    public int getInvokeTimeoutMillis() {
+        return invokeTimeoutMillis;
+    }
+
+    public void setInvokeTimeoutMillis(int invokeTimeoutMillis) {
+        this.invokeTimeoutMillis = invokeTimeoutMillis;
+    }
+
+    public <T> T getInternal(String key, T defaultValue) {
+        Object obj = internal.get(key);
+        if (obj == null) {
+            return defaultValue;
+        }
+        return (T) obj;
+    }
+
+    public <T> T getInternal(String key) {
+        return getInternal(key, null);
+    }
+
+    public void setInternalData(String key, Object value) {
+        internal.put(key, value);
     }
 
     @Override

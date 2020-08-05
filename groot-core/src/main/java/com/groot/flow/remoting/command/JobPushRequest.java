@@ -1,6 +1,8 @@
-package com.groot.flow.remoting;
+package com.groot.flow.remoting.command;
 
 import com.groot.flow.job.JobMetaData;
+import com.groot.flow.remoting.command.AbstractCommandBody;
+import com.groot.flow.remoting.command.GrootCommandBody;
 
 import java.util.List;
 

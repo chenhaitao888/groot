@@ -6,7 +6,7 @@ import com.groot.flow.factory.NamedThreadFactory;
 import com.groot.flow.netty.NettyChannel;
 import com.groot.flow.netty.GrootCodecFactory;
 import com.groot.flow.remoting.AbstractRemotingServer;
-import com.groot.flow.remoting.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommand;
 import com.groot.flow.remoting.GrootRemotingHelper;
 import com.groot.flow.remoting.GrootServerConfig;
 import com.groot.flow.remoting.channel.GrootChannel;

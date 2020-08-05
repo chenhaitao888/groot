@@ -2,8 +2,8 @@ package com.groot.flow.remoting.codec;
 
 
 
-import com.groot.flow.remoting.GrootCommand;
-import com.groot.flow.remoting.GrootCommandBody;
+import com.groot.flow.remoting.command.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommandBody;
 import com.groot.flow.serializable.FastjsonSerializable;
 
 import java.nio.ByteBuffer;

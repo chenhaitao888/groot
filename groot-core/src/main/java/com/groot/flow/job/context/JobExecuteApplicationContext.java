@@ -3,6 +3,7 @@ package com.groot.flow.job.context;
 import com.groot.flow.GrootContext;
 import com.groot.flow.job.runner.GrootJobRunnerAdapter;
 import com.groot.flow.job.runner.JobRunnerPool;
+import com.groot.flow.remoting.GrootRemotingClientDelegate;
 
 /**
  * @author : chenhaitao934
@@ -11,6 +12,7 @@ import com.groot.flow.job.runner.JobRunnerPool;
 public class JobExecuteApplicationContext extends GrootContext {
     private JobRunnerPool jobRunnerPool;
     private GrootJobRunnerAdapter runnerAdapter;
+    private GrootRemotingClientDelegate remotingClientDelegate;
 
     public JobRunnerPool getJobRunnerPool() {
         return jobRunnerPool;
@@ -28,4 +30,11 @@ public class JobExecuteApplicationContext extends GrootContext {
         this.runnerAdapter = runnerAdapter;
     }
 
+    public GrootRemotingClientDelegate getRemotingClientDelegate() {
+        return remotingClientDelegate;
+    }
+
+    public void setRemotingClientDelegate(GrootRemotingClientDelegate remotingClientDelegate) {
+        this.remotingClientDelegate = remotingClientDelegate;
+    }
 }

@@ -1,5 +1,6 @@
 package com.groot.flow.job.runner;
 
+import com.groot.flow.GrootContext;
 import com.groot.flow.concurrent.CustomizeThreadPollExecutor;
 import com.groot.flow.constant.EcTopic;
 import com.groot.flow.constant.GrootResult;
@@ -26,9 +27,10 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class JobRunnerPool {
     private final Logger logger = LoggerFactory.getLogger(JobRunnerPool.class.getName());
-    private JobExecuteApplicationContext context;
+
+    private GrootContext context;
     private ThreadPoolExecutor threadPoolExecutor;
-    public JobRunnerPool(JobExecuteApplicationContext context) {
+    public JobRunnerPool(GrootContext context) {
         this.context = context;
         context.getEventCenter().subscribe(new EventSubscriber(context.getConfig().getId(), (eventInfo) -> {
             setWorkThread(context.getConfig().getWorkThreads());
@@ -53,45 +55,14 @@ public class JobRunnerPool {
         return threadPoolExecutor.getMaximumPoolSize() - threadPoolExecutor.getActiveCount();
     }
 
-    public void execute(JobMetaData jobMetaData, ExecuteCallback callback) throws NoAvailableWorkThreadException{
+    public void execute(JobMetaData jobMetaData, ExecuteCallback callback, JobExecuteApplicationContext context) throws NoAvailableWorkThreadException{
         try {
-            threadPoolExecutor.execute(() -> {
-                if(jobMetaData.getJobType() == JobType.CRON){
-                    GrootResult run = new QuartzCronJobRunnerDelegate(buildCronJobContext(jobMetaData)).run();
-                    // 将运行结果返回给服务端 TODO
-                }
-                else if(jobMetaData.getJobType() == JobType.REPEAT){
-                    // TODO
-
-                }
-                else if(jobMetaData.getJobType() == JobType.FLOW){
-                    JobContext jobContext = buildJobContext(jobMetaData);
-                    GrootJobRunnerAdapter runnerAdapter = null == context.getRunnerAdapter() ? new DefaultRunnerAdapter(jobContext) : context.getRunnerAdapter();
-                    GrootJob jobRunner = runnerAdapter.createJobRunner();
-                    jobRunner.excute(jobContext);
-                    // TODO 实现流式任务依赖
-
-                }else {
-                    logger.info("no such job type can execute");
-                    throw new JobExecuteException("no such job type can execute");
-                }
-            });
+            threadPoolExecutor.execute(new GrootRunnable(jobMetaData, callback, context));
         } catch (RejectedExecutionException e) {
             logger.error("no available work thread to run job");
             throw new NoAvailableWorkThreadException(e);
         }
     }
 
-    private QuartzJobContext buildCronJobContext(JobMetaData jobMetaData) {
-        QuartzJobContext context = new QuartzJobContext();
-        JobContext jobContext = buildJobContext(jobMetaData);
-        context.setJobContext(jobContext);
-        return context;
-    }
 
-    private JobContext buildJobContext(JobMetaData jobMetaData){
-        JobContext jobContext = new JobContext();
-        BeanCopyUtils.copy(jobMetaData, jobContext);
-        return jobContext;
-    }
 }

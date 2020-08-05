@@ -1,4 +1,4 @@
-package com.groot.flow.remoting;
+package com.groot.flow.remoting.command;
 
 import com.alibaba.fastjson.JSON;
 

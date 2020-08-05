@@ -12,7 +12,7 @@ import com.groot.flow.netty.client.GrootRemotingClient;
 import com.groot.flow.processor.JobHandlerProcessor;
 import com.groot.flow.remoting.GrootClient;
 import com.groot.flow.remoting.GrootClientConfig;
-import com.groot.flow.remoting.GrootCommand;
+import com.groot.flow.remoting.command.GrootCommand;
 import com.groot.flow.utils.NetUtils;
 import org.apache.log4j.PropertyConfigurator;
 

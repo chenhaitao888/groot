@@ -3,8 +3,7 @@ package com.groot.flow.netty;
 
 import com.groot.flow.remoting.GrootFuture;
 import com.groot.flow.remoting.GrootChannelHandlerListener;
-import com.groot.flow.remoting.GrootCommand;
-import com.groot.flow.remoting.GrootFuture;
+import com.groot.flow.remoting.command.GrootCommand;
 import com.groot.flow.remoting.codec.GrootCodec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
