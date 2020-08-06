@@ -18,6 +18,10 @@ public class GrootResult {
         this.msg = msg;
     }
 
+    public GrootResult(){
+
+    }
+
     public GrootAction getGrootAction() {
         return grootAction;
     }

@@ -1,9 +1,6 @@
 package com.groot.flow.remoting;
 
-import com.groot.flow.exception.RemotingConnectException;
-import com.groot.flow.exception.RemotingException;
-import com.groot.flow.exception.RemotingSendRequestException;
-import com.groot.flow.exception.RemotingTimeoutException;
+import com.groot.flow.exception.*;
 import com.groot.flow.processor.GrootProcessor;
 import com.groot.flow.remoting.channel.GrootChannel;
 import com.groot.flow.remoting.command.GrootCommand;
@@ -22,6 +19,7 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
     protected final ConcurrentHashMap<String, ChannelWrapper> channelTables = new ConcurrentHashMap<>();
 
     protected AbstractRemotingClient(GrootClientConfig remotingClientConfig) {
+        super(remotingClientConfig.getClientAsyncSemaphoreValue());
         this.remotingClientConfig = remotingClientConfig;
     }
     @Override
@@ -36,16 +34,37 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
 
     @Override
     public GrootCommand invokeSync(String addr, GrootCommand request, long timeoutMillis) throws InterruptedException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
-        GrootChannel channel = null;
-        try {
-            channel = getAndCreateChannel(addr);
-        } catch (Exception e) {
-            e.printStackTrace();
+        GrootChannel channel = getAndCreateChannel(addr);
+        if (channel != null && channel.isConnected()) {
+            try {
+                return this.invokeSyncImpl(channel, request, timeoutMillis);
+            } catch (RemotingSendRequestException e) {
+                logger.error("invokeSync: send request exception, so close the channel{}", addr);
+                GrootRemotingHelper.closeChannel(channel);
+                throw e;
+            }
+        }else {
+            GrootRemotingHelper.closeChannel(channel);
+            throw new RemotingConnectException(addr);
         }
-        if(channel == null){
-            return null;
+    }
+
+    @Override
+    public void invokeAsync(String addr, GrootCommand request, long timeoutMillis, AsyncCallback callback) throws InterruptedException, RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, RemotingTooMuchRequestException {
+        GrootChannel channel = getAndCreateChannel(addr);
+        if (channel != null && channel.isConnected()) {
+            try {
+                this.invokeAsyncImpl(channel, request, timeoutMillis, callback);
+            } catch (RemotingSendRequestException e) {
+                logger.error("invokeSync: send request exception, so close the channel{}", addr);
+                GrootRemotingHelper.closeChannel(channel);
+                throw e;
+            }
+        }else {
+            GrootRemotingHelper.closeChannel(channel);
+            throw new RemotingConnectException(addr);
         }
-        return this.invokeSyncImpl(channel, request, timeoutMillis);
     }
 
     @Override
@@ -59,7 +78,7 @@ public abstract class AbstractRemotingClient extends AbstractRemoting implements
         this.defaultRequestProcessor = new Pair<>(processor, executor);
     }
 
-    private GrootChannel getAndCreateChannel(final String addr) throws Exception {
+    private GrootChannel getAndCreateChannel(final String addr){
 
         ChannelWrapper cw = this.channelTables.get(addr);
         if (cw != null && cw.isConnected()) {

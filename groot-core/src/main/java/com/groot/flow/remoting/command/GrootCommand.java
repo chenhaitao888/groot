@@ -49,8 +49,8 @@ public class GrootCommand implements Serializable {
     }
 
 
-    public GrootCommandBody getBody() {
-        return body;
+    public <T extends GrootCommandBody> T getBody() {
+        return (T) body;
     }
 
     public void setBody(GrootCommandBody body) {

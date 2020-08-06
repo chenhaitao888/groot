@@ -51,6 +51,24 @@ public class GrootRemotingClientDelegate {
         }
     }
 
+    public void invokeAsync(GrootCommand requestCommand, AsyncCallback callback){
+        GrootNode dispenseNode = getDispenseNode();
+        try {
+            grootClient.invokeAsync(dispenseNode.getAddress(), requestCommand,
+                    context.getConfig().getInvokeTimeoutMillis(), callback);
+            this.serverEnable = true;
+        } catch (Exception e) {
+            dispenseNodes.remove(dispenseNode);
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException ex) {
+                logger.error(ex.getMessage(), e);
+            }
+            // 轮询节点
+            invokeAsync(requestCommand, callback);
+        }
+    }
+
     private GrootNode getDispenseNode() {
         // todo 通过负载均衡获取node
         return dispenseNodes.get(0);

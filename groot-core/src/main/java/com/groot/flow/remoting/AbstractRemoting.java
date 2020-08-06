@@ -1,8 +1,10 @@
 package com.groot.flow.remoting;
 
 
+import com.groot.flow.exception.RemotingConnectException;
 import com.groot.flow.exception.RemotingSendRequestException;
 import com.groot.flow.exception.RemotingTimeoutException;
+import com.groot.flow.exception.RemotingTooMuchRequestException;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.logger.Logger;
 import com.groot.flow.processor.GrootProcessor;
@@ -17,6 +19,8 @@ import com.groot.flow.utils.Pair;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author : chenhaitao934
@@ -29,6 +33,11 @@ public abstract class AbstractRemoting {
             new ConcurrentHashMap<Integer, GrootResponseFuture>(256);
     protected final HashMap<Integer, Pair<GrootProcessor, ExecutorService>> processorTables = new HashMap<>(64);
     protected Pair<GrootProcessor, ExecutorService> defaultRequestProcessor;
+    protected final Semaphore semaphoreAsync;
+
+    public AbstractRemoting(int permitSemaphore) {
+        this.semaphoreAsync = new Semaphore(permitSemaphore, true);
+    }
 
     //protected final ConcurrentHashMap<Integer, RemotingProcessor> processorTables = new ConcurrentHashMap<>();
     public void processMessageReceived(GrootChannel channel, GrootCommand command) {
@@ -120,4 +129,38 @@ public abstract class AbstractRemoting {
         return new DefaultCodec();
     }
 
+    protected void invokeAsyncImpl(GrootChannel channel, GrootCommand request, long timeoutMillis, AsyncCallback callback) throws InterruptedException, RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, RemotingTooMuchRequestException {
+        boolean acquired = this.semaphoreAsync.tryAcquire(timeoutMillis, TimeUnit.MILLISECONDS);
+        final SemaphoreReleaseOnlyOnce once = new SemaphoreReleaseOnlyOnce(this.semaphoreAsync);
+        if(acquired){
+            try {
+                GrootResponseFuture responseFuture = new GrootResponseFuture(request.getOpaque(), timeoutMillis, callback
+                        , once);
+                this.responseTable.put(request.getOpaque(), responseFuture);
+                channel.writeAndFlush(request).addListener(future -> {
+                    if (future.isSuccess()) {
+                        responseFuture.setSendRequestOK(true);
+                        return;
+                    } else {
+                        responseFuture.setSendRequestOK(false);
+                    }
+
+                    responseFuture.putResponse(null);
+                    responseFuture.executeInvokeCallback();
+
+                    responseTable.remove(request.getOpaque());
+                    logger.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.");
+                    logger.warn(request.toString());
+                });
+            } catch (Exception e) {
+                once.release();
+                logger.error("write send a request command to channel {} failed", channel.remoteAddress());
+            }
+        }else {
+            logger.warn("invokeAsyncImpl tryAcquire semaphore timeout {} cause too much request cause, waiting thread" +
+                    " nums {}", timeoutMillis, this.semaphoreAsync.getQueueLength());
+            throw new RemotingTooMuchRequestException("too much request invoke, tryAcquire timeout(ms)" + timeoutMillis);
+        }
+    }
 }

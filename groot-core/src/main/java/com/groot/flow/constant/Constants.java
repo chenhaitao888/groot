@@ -10,4 +10,6 @@ public interface Constants {
     String QUARTZ_CONTEXT = "quartz_contex";
 
     String MACHINE_ENOUGH = "gooot_machine_enough";
+
+    int LATCH_TIMEOUT_MILLIS = 60 * 1000;
 }

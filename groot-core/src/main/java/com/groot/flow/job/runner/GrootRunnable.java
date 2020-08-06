@@ -5,6 +5,7 @@ import com.groot.flow.constant.Constants;
 import com.groot.flow.constant.GrootResult;
 import com.groot.flow.constant.JobType;
 import com.groot.flow.exception.JobExecuteException;
+import com.groot.flow.exception.RemotingTimeoutException;
 import com.groot.flow.factory.LoggerFactory;
 import com.groot.flow.job.GrootJob;
 import com.groot.flow.job.JobMetaData;
@@ -69,6 +70,8 @@ public class GrootRunnable implements Runnable {
                 grootResult.setReceiveNewTask(false);
             }
             callback.complete(grootResult);
+        } catch (RemotingTimeoutException e) {
+            logger.error("callback exception", e);
         } finally {
             blockedOn(null);
         }

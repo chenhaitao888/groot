@@ -44,13 +44,8 @@ public class GrootRemotingHelper {
 
     public static void closeChannel(GrootChannel channel) {
         final String addrRemote = GrootRemotingHelper.parseChannelRemoteAddr(channel);
-        channel.close().addListener(new GrootChannelHandlerListener() {
-            @Override
-            public void operationComplete(GrootFuture future) throws Exception {
-                logger.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
-                        future.isSuccess());
-            }
-        });
+        channel.close().addListener(future -> logger.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
+                future.isSuccess()));
     }
 
 }
