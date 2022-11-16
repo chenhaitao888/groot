@@ -23,7 +23,7 @@
         <curator.version>2.7.0</curator.version>
         <fastjson.version>1.2.62</fastjson.version>
         <log4j.version>1.2.16</log4j.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.12.7.1</jackson.version>
         <netty.version>4.1.50.Final</netty.version>
         <quartz.version>2.3.2</quartz.version>
         <cglib.version>3.3.0</cglib.version>
